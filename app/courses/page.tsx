@@ -24,8 +24,10 @@ export default function CoursesPage() {
     <div className="min-h-screen bg-green-50">
       <header className="bg-green-700 text-white p-4 shadow-lg">
         <div className="max-w-4xl mx-auto flex justify-between items-center">
-          <Link href="/" className="text-2xl font-bold">⛳ ParPass</Link>
-        </div>
+        <div className="flex items-center gap-4">
+  <Link href="/" className="text-green-200 hover:text-white">← Back</Link>
+  <Link href="/" className="text-2xl font-bold">⛳ ParPass</Link>
+</div>
       </header>
 
       <main className="max-w-4xl mx-auto p-6">
