@@ -160,4 +160,14 @@ export interface Round {
     const res = await fetch(`${API_URL}/stats/top-members`, { cache: 'no-store' });
     return res.json();
   }
+  export interface RecommendedCourse extends Course {
+    total_plays: string;
+    unique_players: string;
+    score: string;
+    reason: string;
+  }
   
+  export async function getRecommendations(memberId: string): Promise<RecommendedCourse[]> {
+    const res = await fetch(`${API_URL}/members/${memberId}/recommendations`, { cache: 'no-store' });
+    return res.json();
+  }

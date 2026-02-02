@@ -1,13 +1,14 @@
 'use client';
 
 import { useState } from 'react';
-import { getMemberByCode, getMemberUsage, Member, Usage } from '@/lib/api';
+import { getMemberByCode, getMemberUsage, getRecommendations, Member, Usage, RecommendedCourse } from '@/lib/api';
 import Link from 'next/link';
 
 export default function Home() {
   const [code, setCode] = useState('');
   const [member, setMember] = useState<Member | null>(null);
   const [usage, setUsage] = useState<Usage | null>(null);
+  const [recommendations, setRecommendations] = useState<RecommendedCourse[]>([]);
   const [error, setError] = useState('');
   const [loading, setLoading] = useState(false);
 
@@ -22,6 +23,10 @@ export default function Home() {
       setMember(memberData);
       setUsage(usageData);
       localStorage.setItem('parpass_code', code.toUpperCase());
+      
+      // Load recommendations
+      const recs = await getRecommendations(memberData.id);
+      setRecommendations(recs);
     } catch (err) {
       setError('Invalid ParPass code. Try PP100001');
     } finally {
@@ -32,6 +37,7 @@ export default function Home() {
   const handleLogout = () => {
     setMember(null);
     setUsage(null);
+    setRecommendations([]);
     setCode('');
     localStorage.removeItem('parpass_code');
   };
@@ -162,7 +168,7 @@ export default function Home() {
             >
               <div className="flex items-center gap-4">
                 <div className="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center">
-                  <span className="text-2xl">📊</span>
+                  <span className="text-2xl">📈</span>
                 </div>
                 <div>
                   <h3 className="font-semibold text-gray-900">Dashboard</h3>
@@ -173,8 +179,43 @@ export default function Home() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </Link>
-
           </div>
+
+          {/* Recommendations */}
+          {recommendations.length > 0 && (
+            <div className="mt-8">
+              <h3 className="text-lg font-semibold text-gray-900 mb-4">Recommended for You</h3>
+              <div className="space-y-3">
+                {recommendations.slice(0, 3).map((course) => (
+                  <Link
+                    key={course.id}
+                    href={`/courses/${course.id}`}
+                    className="block bg-white rounded-2xl p-5 shadow-sm hover:shadow-md border border-gray-100 transition-all"
+                  >
+                    <div className="flex justify-between items-start gap-4">
+                      <div className="flex-1 min-w-0">
+                        <h4 className="font-semibold text-gray-900 truncate">{course.name}</h4>
+                        <p className="text-gray-500 text-sm">{course.city}, {course.state}</p>
+                        <p className="text-emerald-600 text-sm mt-2">{course.reason}</p>
+                      </div>
+                      <div className="flex items-center gap-2">
+                        <span className={`px-2.5 py-1 rounded-lg text-xs font-medium ${
+                          course.tier_required === 'premium'
+                            ? 'bg-purple-50 text-purple-700'
+                            : 'bg-emerald-50 text-emerald-700'
+                        }`}>
+                          {course.tier_required}
+                        </span>
+                        <svg className="w-5 h-5 text-gray-300" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+                        </svg>
+                      </div>
+                    </div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          )}
         </main>
       </div>
     );
