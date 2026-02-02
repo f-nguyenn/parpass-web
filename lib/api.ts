@@ -84,3 +84,19 @@ export async function removeFavorite(memberId: string, courseId: string) {
   });
   return res.json();
 }
+
+export interface Round {
+    id: string;
+    checked_in_at: string;
+    holes_played: number;
+    course_name: string;
+    city: string;
+    state: string;
+    tier_required: 'core' | 'premium';
+  }
+  
+  export async function getMemberHistory(memberId: string): Promise<Round[]> {
+    const res = await fetch(`${API_URL}/members/${memberId}/history`, { cache: 'no-store' });
+    return res.json();
+  }
+  
