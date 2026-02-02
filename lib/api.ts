@@ -167,7 +167,17 @@ export interface Round {
     reason: string;
   }
   
+  const ML_API_URL = 'http://localhost:3002';
+
   export async function getRecommendations(memberId: string): Promise<RecommendedCourse[]> {
-    const res = await fetch(`${API_URL}/members/${memberId}/recommendations`, { cache: 'no-store' });
-    return res.json();
+    try {
+      const res = await fetch(`${ML_API_URL}/recommendations/${memberId}`, { cache: 'no-store' });
+      const data = await res.json();
+      return data.recommendations;
+    } catch (err) {
+      // Fallback to Node API if ML API is down
+      const res = await fetch(`${API_URL}/members/${memberId}/recommendations`, { cache: 'no-store' });
+      return res.json();
+    }
   }
+  
