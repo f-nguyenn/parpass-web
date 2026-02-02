@@ -155,6 +155,25 @@ export default function Home() {
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
               </svg>
             </Link>
+
+            <Link
+              href="/dashboard"
+              className="bg-white rounded-2xl p-5 flex items-center justify-between shadow-sm hover:shadow-md border border-gray-100"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-purple-50 rounded-xl flex items-center justify-center">
+                  <span className="text-2xl">📊</span>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">Dashboard</h3>
+                  <p className="text-gray-500 text-sm">View analytics</p>
+                </div>
+              </div>
+              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+
           </div>
         </main>
       </div>

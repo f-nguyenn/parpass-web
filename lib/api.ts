@@ -100,3 +100,64 @@ export interface Round {
     return res.json();
   }
   
+  export interface OverviewStats {
+    active_members: string;
+    total_courses: string;
+    total_rounds: string;
+    rounds_this_month: string;
+  }
+  
+  export interface PopularCourse {
+    id: string;
+    name: string;
+    city: string;
+    tier_required: string;
+    total_rounds: string;
+    unique_members: string;
+  }
+  
+  export interface MonthlyRounds {
+    month: string;
+    month_date: string;
+    rounds: string;
+  }
+  
+  export interface TierBreakdown {
+    tier: string;
+    rounds: string;
+  }
+  
+  export interface TopMember {
+    id: string;
+    first_name: string;
+    last_name: string;
+    health_plan: string;
+    tier: string;
+    total_rounds: string;
+  }
+  
+  export async function getOverviewStats(): Promise<OverviewStats> {
+    const res = await fetch(`${API_URL}/stats/overview`, { cache: 'no-store' });
+    return res.json();
+  }
+  
+  export async function getPopularCourses(): Promise<PopularCourse[]> {
+    const res = await fetch(`${API_URL}/stats/popular-courses`, { cache: 'no-store' });
+    return res.json();
+  }
+  
+  export async function getRoundsByMonth(): Promise<MonthlyRounds[]> {
+    const res = await fetch(`${API_URL}/stats/rounds-by-month`, { cache: 'no-store' });
+    return res.json();
+  }
+  
+  export async function getTierBreakdown(): Promise<TierBreakdown[]> {
+    const res = await fetch(`${API_URL}/stats/tier-breakdown`, { cache: 'no-store' });
+    return res.json();
+  }
+  
+  export async function getTopMembers(): Promise<TopMember[]> {
+    const res = await fetch(`${API_URL}/stats/top-members`, { cache: 'no-store' });
+    return res.json();
+  }
+  
