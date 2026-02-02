@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { getMemberByCode, getMemberUsage, Member, Usage } from '@/lib/api';
+import Link from 'next/link';
 
 export default function Home() {
   const [code, setCode] = useState('');
@@ -35,119 +36,197 @@ export default function Home() {
     localStorage.removeItem('parpass_code');
   };
 
+  // Logged in view
   if (member && usage) {
+    const roundsRemaining = member.monthly_rounds - usage.rounds_used;
+    const progressPercent = (usage.rounds_used / member.monthly_rounds) * 100;
+
     return (
-      <div className="min-h-screen bg-green-50">
-        <header className="bg-green-700 text-white p-4 shadow-lg">
-          <div className="max-w-4xl mx-auto flex justify-between items-center">
-            <h1 className="text-2xl font-bold">⛳ ParPass</h1>
+      <div className="min-h-screen bg-[#fafafa]">
+        {/* Header */}
+        <header className="bg-white border-b border-gray-100">
+          <div className="max-w-2xl mx-auto px-6 py-4 flex justify-between items-center">
+            <h1 className="text-xl font-semibold tracking-tight">ParPass</h1>
             <button
               onClick={handleLogout}
-              className="text-green-200 hover:text-white"
+              className="text-sm text-gray-500 hover:text-gray-900"
             >
               Sign Out
             </button>
           </div>
         </header>
 
-        <main className="max-w-4xl mx-auto p-6">
-          {/* Member Card */}
-          <div className="bg-white rounded-xl shadow-lg p-6 mb-6">
-            <div className="flex justify-between items-start">
+        <main className="max-w-2xl mx-auto px-6 py-8">
+          {/* Welcome Section */}
+          <div className="mb-8">
+            <p className="text-gray-500 text-sm">Welcome back</p>
+            <h2 className="text-3xl font-bold tracking-tight mt-1">
+              {member.first_name}
+            </h2>
+          </div>
+
+          {/* Membership Card */}
+          <div className="bg-gradient-to-br from-emerald-500 to-emerald-600 rounded-3xl p-6 text-white shadow-lg shadow-emerald-500/20 mb-6">
+            <div className="flex justify-between items-start mb-8">
               <div>
-                <h2 className="text-2xl font-bold text-gray-800">
-                  {member.first_name} {member.last_name}
-                </h2>
-                <p className="text-gray-600">{member.health_plan_name}</p>
-                <span className={`inline-block mt-2 px-3 py-1 rounded-full text-sm font-medium ${
-                  member.tier === 'premium' 
-                    ? 'bg-purple-100 text-purple-800' 
-                    : 'bg-green-100 text-green-800'
-                }`}>
+                <p className="text-emerald-100 text-sm font-medium">
                   {member.tier.toUpperCase()} MEMBER
-                </span>
+                </p>
+                <p className="text-white/80 text-sm mt-1">
+                  {member.health_plan_name}
+                </p>
               </div>
-              <div className="text-right">
-                <div className="text-3xl font-bold text-green-700">
-                  {member.monthly_rounds - usage.rounds_used}
-                </div>
-                <div className="text-gray-500 text-sm">rounds remaining</div>
-                <div className="text-gray-400 text-xs mt-1">
-                  {usage.rounds_used} of {member.monthly_rounds} used this month
-                </div>
+              <div className="w-10 h-10 bg-white/20 rounded-full flex items-center justify-center">
+                <span className="text-lg">⛳</span>
               </div>
             </div>
 
-            {/* ParPass Code Display */}
-            <div className="mt-6 p-4 bg-gray-100 rounded-lg text-center">
-              <div className="text-gray-500 text-sm">Your ParPass Code</div>
-              <div className="text-3xl font-mono font-bold tracking-widest text-gray-800">
-                {member.parpass_code}
+            <div className="mb-4">
+              <div className="flex justify-between items-end mb-2">
+                <span className="text-5xl font-bold">{roundsRemaining}</span>
+                <span className="text-emerald-100 text-sm mb-2">of {member.monthly_rounds} rounds left</span>
               </div>
-              <div className="text-gray-500 text-xs mt-1">Show this at check-in</div>
+              <div className="h-2 bg-white/20 rounded-full overflow-hidden">
+                <div 
+                  className="h-full bg-white rounded-full transition-all duration-500"
+                  style={{ width: `${100 - progressPercent}%` }}
+                />
+              </div>
+            </div>
+
+            <div className="pt-4 border-t border-white/20">
+              <p className="text-emerald-100 text-xs mb-1">Member ID</p>
+              <p className="font-mono text-lg tracking-widest">{member.parpass_code}</p>
             </div>
           </div>
 
           {/* Quick Actions */}
-          <div className="grid grid-cols-2 gap-4">
-            <a
+          <div className="grid grid-cols-1 gap-3">
+            <Link
               href="/courses"
-              className="bg-white rounded-xl shadow p-6 hover:shadow-lg transition-shadow"
+              className="bg-white rounded-2xl p-5 flex items-center justify-between shadow-sm hover:shadow-md border border-gray-100"
             >
-              <div className="text-3xl mb-2">🏌️</div>
-              <h3 className="font-bold text-gray-800">Find Courses</h3>
-              <p className="text-gray-500 text-sm">Browse nearby courses</p>
-            </a>
-            <a
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-emerald-50 rounded-xl flex items-center justify-center">
+                  <span className="text-2xl">🏌️</span>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">Find Courses</h3>
+                  <p className="text-gray-500 text-sm">Browse nearby courses</p>
+                </div>
+              </div>
+              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+
+            <Link
               href="/favorites"
-              className="bg-white rounded-xl shadow p-6 hover:shadow-lg transition-shadow"
+              className="bg-white rounded-2xl p-5 flex items-center justify-between shadow-sm hover:shadow-md border border-gray-100"
             >
-              <div className="text-3xl mb-2">⭐</div>
-              <h3 className="font-bold text-gray-800">Favorites</h3>
-              <p className="text-gray-500 text-sm">Your saved courses</p>
-            </a>
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-rose-50 rounded-xl flex items-center justify-center">
+                  <span className="text-2xl">❤️</span>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">Favorites</h3>
+                  <p className="text-gray-500 text-sm">Your saved courses</p>
+                </div>
+              </div>
+              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
+
+            <Link
+              href="/history"
+              className="bg-white rounded-2xl p-5 flex items-center justify-between shadow-sm hover:shadow-md border border-gray-100"
+            >
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 bg-blue-50 rounded-xl flex items-center justify-center">
+                  <span className="text-2xl">📊</span>
+                </div>
+                <div>
+                  <h3 className="font-semibold text-gray-900">History</h3>
+                  <p className="text-gray-500 text-sm">Your recent rounds</p>
+                </div>
+              </div>
+              <svg className="w-5 h-5 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
+              </svg>
+            </Link>
           </div>
         </main>
       </div>
     );
   }
 
+  // Login view
   return (
-    <div className="min-h-screen bg-green-50 flex items-center justify-center p-4">
-      <div className="bg-white rounded-xl shadow-lg p-8 w-full max-w-md">
-        <div className="text-center mb-8">
-          <h1 className="text-4xl font-bold text-green-700 mb-2">⛳ ParPass</h1>
-          <p className="text-gray-600">Your golf network membership</p>
+    <div className="min-h-screen bg-white flex flex-col">
+      {/* Hero section */}
+      <div className="flex-1 flex flex-col justify-center px-6 py-12">
+        <div className="max-w-sm mx-auto w-full">
+          {/* Logo */}
+          <div className="text-center mb-12">
+            <div className="inline-flex items-center justify-center w-16 h-16 bg-emerald-500 rounded-2xl mb-6 shadow-lg shadow-emerald-500/30">
+              <span className="text-3xl">⛳</span>
+            </div>
+            <h1 className="text-3xl font-bold tracking-tight text-gray-900">ParPass</h1>
+            <p className="text-gray-500 mt-2">Your golf network membership</p>
+          </div>
+
+          {/* Login Form */}
+          <form onSubmit={handleLogin}>
+            <div className="mb-4">
+              <label className="block text-sm font-medium text-gray-700 mb-2">
+                Member Code
+              </label>
+              <input
+                type="text"
+                value={code}
+                onChange={(e) => setCode(e.target.value)}
+                placeholder="PP100001"
+                className="w-full px-4 py-4 bg-gray-50 border-0 rounded-xl text-center text-xl tracking-widest uppercase font-mono focus:ring-2 focus:ring-emerald-500 focus:bg-white transition-all"
+                maxLength={8}
+              />
+            </div>
+
+            {error && (
+              <div className="mb-4 p-3 bg-red-50 rounded-xl">
+                <p className="text-red-600 text-sm text-center">{error}</p>
+              </div>
+            )}
+
+            <button
+              type="submit"
+              disabled={loading || code.length < 6}
+              className="w-full bg-gray-900 text-white py-4 rounded-xl font-semibold hover:bg-gray-800 disabled:bg-gray-200 disabled:text-gray-400 disabled:cursor-not-allowed transition-all"
+            >
+              {loading ? (
+                <span className="flex items-center justify-center gap-2">
+                  <svg className="animate-spin h-5 w-5" viewBox="0 0 24 24">
+                    <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4" fill="none" />
+                    <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+                  </svg>
+                  Signing in...
+                </span>
+              ) : (
+                'Continue'
+              )}
+            </button>
+          </form>
+
+          <p className="text-center text-gray-400 text-sm mt-8">
+            Demo: PP100001 – PP100010
+          </p>
         </div>
+      </div>
 
-        <form onSubmit={handleLogin}>
-          <label className="block text-gray-700 font-medium mb-2">
-            Enter your ParPass code
-          </label>
-          <input
-            type="text"
-            value={code}
-            onChange={(e) => setCode(e.target.value)}
-            placeholder="PP100001"
-            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-green-500 text-center text-xl tracking-widest uppercase"
-            maxLength={8}
-          />
-          
-          {error && (
-            <p className="text-red-500 text-sm mt-2">{error}</p>
-          )}
-
-          <button
-            type="submit"
-            disabled={loading || code.length < 6}
-            className="w-full mt-4 bg-green-600 text-white py-3 rounded-lg font-medium hover:bg-green-700 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
-          >
-            {loading ? 'Signing in...' : 'Sign In'}
-          </button>
-        </form>
-
-        <p className="text-center text-gray-400 text-sm mt-6">
-          Demo codes: PP100001 - PP100010
+      {/* Footer */}
+      <div className="px-6 py-6 text-center">
+        <p className="text-gray-400 text-xs">
+          Golf network access through your health plan
         </p>
       </div>
     </div>
