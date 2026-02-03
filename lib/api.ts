@@ -11,6 +11,21 @@ export interface Course {
   phone: string;
   latitude: string;
   longitude: string;
+  average_rating: number | null;
+  review_count: number;
+}
+
+export interface Review {
+  id: string;
+  member_first_name: string;
+  rating: number;
+  comment: string | null;
+  created_at: string;
+}
+
+export interface CourseRating {
+  average_rating: number | null;
+  review_count: number;
 }
 
 export interface Member {
@@ -180,4 +195,31 @@ export interface Round {
       return res.json();
     }
   }
-  
+
+  export async function getCourseReviews(courseId: string): Promise<Review[]> {
+    const res = await fetch(`${API_URL}/courses/${courseId}/reviews`, { cache: 'no-store' });
+    return res.json();
+  }
+
+  export async function getCourseRating(courseId: string): Promise<CourseRating> {
+    const res = await fetch(`${API_URL}/courses/${courseId}/rating`, { cache: 'no-store' });
+    return res.json();
+  }
+
+  export async function submitReview(
+    courseId: string,
+    memberId: string,
+    rating: number,
+    comment?: string
+  ): Promise<Review> {
+    const res = await fetch(`${API_URL}/courses/${courseId}/reviews`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ member_id: memberId, rating, comment }),
+    });
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.error);
+    }
+    return res.json();
+  }

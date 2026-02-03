@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, use } from 'react';
-import { getCourse, getMemberFavorites, addFavorite, removeFavorite, Course } from '@/lib/api';
+import { getCourse, getMemberFavorites, addFavorite, removeFavorite, getCourseReviews, getCourseRating, submitReview, Course, Review, CourseRating } from '@/lib/api';
 import { loadMemberFromStorage, AuthState } from '@/lib/auth';
 import Link from 'next/link';
 
@@ -11,6 +11,13 @@ export default function CourseDetailPage({ params }: { params: Promise<{ id: str
   const [isFavorite, setIsFavorite] = useState(false);
   const [loading, setLoading] = useState(true);
   const [auth, setAuth] = useState<AuthState>({ member: null, usage: null });
+  const [reviews, setReviews] = useState<Review[]>([]);
+  const [rating, setRating] = useState<CourseRating>({ average_rating: null, review_count: 0 });
+  const [hasPlayed, setHasPlayed] = useState(false);
+  const [userRating, setUserRating] = useState(0);
+  const [userComment, setUserComment] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [hoverRating, setHoverRating] = useState(0);
 
   useEffect(() => {
     async function loadData() {
@@ -20,9 +27,32 @@ export default function CourseDetailPage({ params }: { params: Promise<{ id: str
       const courseData = await getCourse(id);
       setCourse(courseData);
 
+      // Load reviews and rating
+      const [reviewsData, ratingData] = await Promise.all([
+        getCourseReviews(id),
+        getCourseRating(id)
+      ]);
+      setReviews(reviewsData);
+      setRating(ratingData);
+
       if (authState.member) {
         const favs = await getMemberFavorites(authState.member.id);
         setIsFavorite(favs.some(f => f.id === id));
+
+        // Check if member has played this course
+        const { getMemberHistory } = await import('@/lib/api');
+        const history = await getMemberHistory(authState.member.id);
+        const played = history.some(r => r.course_name === courseData.name);
+        setHasPlayed(played);
+
+        // Check if member has already reviewed
+        const existingReview = reviewsData.find(
+          r => r.member_first_name === authState.member?.first_name
+        );
+        if (existingReview) {
+          setUserRating(existingReview.rating);
+          setUserComment(existingReview.comment || '');
+        }
       }
 
       setLoading(false);
@@ -44,6 +74,34 @@ export default function CourseDetailPage({ params }: { params: Promise<{ id: str
     } catch {
       setIsFavorite(isFavorite);
     }
+  };
+
+  const handleSubmitReview = async () => {
+    if (!auth.member || userRating === 0) return;
+
+    setSubmitting(true);
+    try {
+      await submitReview(id, auth.member.id, userRating, userComment || undefined);
+      // Reload reviews
+      const [reviewsData, ratingData] = await Promise.all([
+        getCourseReviews(id),
+        getCourseRating(id)
+      ]);
+      setReviews(reviewsData);
+      setRating(ratingData);
+    } catch (err) {
+      console.error('Failed to submit review:', err);
+    } finally {
+      setSubmitting(false);
+    }
+  };
+
+  const formatDate = (dateString: string) => {
+    return new Date(dateString).toLocaleDateString('en-US', {
+      month: 'short',
+      day: 'numeric',
+      year: 'numeric'
+    });
   };
 
   if (loading) {
@@ -210,6 +268,117 @@ export default function CourseDetailPage({ params }: { params: Promise<{ id: str
               </p>
             </div>
           </div>
+        </div>
+
+        {/* Ratings & Reviews Section */}
+        <div className="bg-white rounded-2xl shadow-sm border border-gray-100 mt-4 overflow-hidden">
+          {/* Rating Summary */}
+          <div className="p-6 border-b border-gray-100">
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg font-semibold text-gray-900">Reviews</h2>
+              {rating.average_rating && (
+                <div className="flex items-center gap-2">
+                  <div className="flex">
+                    {[1, 2, 3, 4, 5].map((star) => (
+                      <span
+                        key={star}
+                        className={`text-lg ${star <= Math.round(rating.average_rating!) ? 'text-yellow-400' : 'text-gray-200'}`}
+                      >
+                        ★
+                      </span>
+                    ))}
+                  </div>
+                  <span className="font-semibold text-gray-900">{rating.average_rating}</span>
+                  <span className="text-gray-500 text-sm">({rating.review_count} reviews)</span>
+                </div>
+              )}
+              {!rating.average_rating && (
+                <span className="text-gray-500 text-sm">No reviews yet</span>
+              )}
+            </div>
+          </div>
+
+          {/* Write Review Form (if member has played) */}
+          {auth.member && hasPlayed && (
+            <div className="p-6 bg-gray-50 border-b border-gray-100">
+              <h3 className="font-medium text-gray-900 mb-3">
+                {userRating > 0 ? 'Update your review' : 'Write a review'}
+              </h3>
+              <div className="flex gap-1 mb-4">
+                {[1, 2, 3, 4, 5].map((star) => (
+                  <button
+                    key={star}
+                    type="button"
+                    onClick={() => setUserRating(star)}
+                    onMouseEnter={() => setHoverRating(star)}
+                    onMouseLeave={() => setHoverRating(0)}
+                    className="text-2xl transition-colors"
+                  >
+                    <span className={star <= (hoverRating || userRating) ? 'text-yellow-400' : 'text-gray-300'}>
+                      ★
+                    </span>
+                  </button>
+                ))}
+                {userRating > 0 && (
+                  <span className="ml-2 text-sm text-gray-500 self-center">
+                    {userRating === 1 && 'Poor'}
+                    {userRating === 2 && 'Fair'}
+                    {userRating === 3 && 'Good'}
+                    {userRating === 4 && 'Very Good'}
+                    {userRating === 5 && 'Excellent'}
+                  </span>
+                )}
+              </div>
+              <textarea
+                value={userComment}
+                onChange={(e) => setUserComment(e.target.value)}
+                placeholder="Share your experience (optional)"
+                className="w-full px-4 py-3 bg-white rounded-xl border border-gray-200 text-sm resize-none focus:ring-2 focus:ring-emerald-500 focus:border-transparent"
+                rows={3}
+              />
+              <button
+                onClick={handleSubmitReview}
+                disabled={userRating === 0 || submitting}
+                className="mt-3 bg-emerald-500 text-white py-2.5 px-5 rounded-xl font-medium hover:bg-emerald-600 disabled:bg-gray-300 disabled:cursor-not-allowed transition-colors"
+              >
+                {submitting ? 'Submitting...' : userRating > 0 ? 'Submit Review' : 'Select a rating'}
+              </button>
+            </div>
+          )}
+
+          {/* Reviews List */}
+          {reviews.length > 0 ? (
+            <div className="divide-y divide-gray-100">
+              {reviews.map((review) => (
+                <div key={review.id} className="p-6">
+                  <div className="flex items-start justify-between mb-2">
+                    <div>
+                      <span className="font-medium text-gray-900">{review.member_first_name}</span>
+                      <span className="text-gray-400 text-sm ml-2">{formatDate(review.created_at)}</span>
+                    </div>
+                    <div className="flex">
+                      {[1, 2, 3, 4, 5].map((star) => (
+                        <span
+                          key={star}
+                          className={`text-sm ${star <= review.rating ? 'text-yellow-400' : 'text-gray-200'}`}
+                        >
+                          ★
+                        </span>
+                      ))}
+                    </div>
+                  </div>
+                  {review.comment && (
+                    <p className="text-gray-600 text-sm">{review.comment}</p>
+                  )}
+                </div>
+              ))}
+            </div>
+          ) : (
+            <div className="p-6 text-center text-gray-500">
+              <span className="text-2xl block mb-2">📝</span>
+              Be the first to review this course!
+            </div>
+          )}
         </div>
       </main>
     </div>
