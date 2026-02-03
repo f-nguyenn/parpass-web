@@ -132,6 +132,13 @@ export default function CoursesPage() {
                       {course.city}, {course.state}
                     </p>
                     <div className="flex items-center gap-3 mt-3">
+                      {course.average_rating && (
+                        <div className="flex items-center gap-1">
+                          <span className="text-yellow-400">★</span>
+                          <span className="text-sm font-medium text-gray-700">{course.average_rating}</span>
+                          <span className="text-gray-400 text-sm">({course.review_count})</span>
+                        </div>
+                      )}
                       <span className={`px-2.5 py-1 rounded-lg text-xs font-medium ${
                         course.tier_required === 'premium'
                           ? 'bg-purple-50 text-purple-700'
